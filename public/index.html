@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="hi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SUNO MEWAT - Unlimited Free Music</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFD54F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SUNO MEWAT">
+    <link rel="apple-touch-icon" href="/images/splash_golden_white.png">
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            light: '#FFF8E1',
+                            DEFAULT: '#FFD54F',
+                            dark: '#FFB300'
+                        },
+                        darkBg: '#0F0F12',
+                        darkCard: 'rgba(26, 26, 30, 0.90)',
+                        lightCard: 'rgba(255, 255, 255, 0.92)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #FFFDF7;
+            user-select: none;
+            -webkit-user-select: none;
+            padding-bottom: calc(115px + env(safe-area-inset-bottom, 0px));
+        }
+        .dark body { background-color: #0F0F12; color: #FFFFFF; }
+        
+        /* iPhone Safe-Area Inset Support */
+        header.app-header {
+            padding-top: calc(0.65rem + env(safe-area-inset-top, 0px)) !important;
+        }
+        .floating-navbar {
+            background-image: url('/images/navbar_buttons_bg.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #miniPlayer {
+            bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #fullSearchView {
+            padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #playerSheet {
+            padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+            padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+        #singersModal, #installModal {
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        .liquid-glass {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 213, 79, 0.30);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #FFD54F 0%, #FFB300 100%);
+        }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes rotate-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-vinyl { animation: rotate-slow 20s linear infinite; }
+        .paused-vinyl { animation-play-state: paused; }
+    </style>
+</head>
+<body class="text-neutral-800 dark:text-neutral-100 min-h-screen flex flex-col hide-scroll">
+
+    <!-- TOP HEADER (With iPhone Notch / Dynamic Island Safe-Area) -->
+    <header class="app-header sticky top-0 z-30 px-4 py-2.5 liquid-glass bg-white/90 dark:bg-darkBg/90 flex items-center justify-between border-b border-gold/25">
+        <div class="flex items-center space-x-2">
+            <img id="appLogo" src="/images/banner_namaste_suno_mewat.png" alt="SUNO MEWAT" class="h-9 w-auto object-contain cursor-pointer" onclick="switchNavTab('home')">
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="openSearchView()" title="Search" class="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold border border-gold/30 hover:scale-105 active:scale-95 transition">
+                <i data-lucide="search" class="w-4 h-4"></i>
+            </button>
+            <button onclick="openSingersModal()" title="Favorite Singers" class="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold border border-gold/30 hover:scale-105 active:scale-95 transition">
+                <i data-lucide="mic-2" class="w-4 h-4"></i>
+            </button>
+            <button onclick="toggleTheme()" title="Toggle Theme" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-gold hover:scale-105 active:scale-95 transition">
+                <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+            </button>
+            <a href="/admin" title="Admin Hub" class="w-9 h-9 rounded-full bg-gold-dark/20 flex items-center justify-center text-amber-700 dark:text-gold hover:scale-105 active:scale-95 transition">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- LIVE ANNOUNCEMENT TICKER -->
+    <div id="announcementBar" class="hidden bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-semibold px-4 py-1.5 flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-2 overflow-hidden truncate">
+            <i data-lucide="bell" class="w-3.5 h-3.5 flex-shrink-0 animate-bounce"></i>
+            <span id="announcementText" class="truncate">Welcome to SUNO MEWAT!</span>
+        </div>
+        <button onclick="document.getElementById('announcementBar').style.display='none'" class="text-white/80 hover:text-white ml-2 text-xs">✕</button>
+    </div>
+
+    <!-- MAIN APP CONTENT CONTAINERS (TABS) -->
+    <main class="max-w-4xl mx-auto w-full px-4 pt-2 flex-1">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: HOME PAGE                           -->
+        <!-- ========================================== -->
+        <section id="tab-home" class="nav-content space-y-4">
+
+            <!-- PROMINENT GLOWING SEARCH BAR -->
+            <div onclick="openSearchView()" class="relative rounded-full bg-white dark:bg-neutral-900 border-2 border-gold/40 shadow-sm px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-gold transition">
+                <div class="flex items-center space-x-2.5 text-neutral-400">
+                    <i data-lucide="search" class="w-5 h-5 text-gold"></i>
+                    <span class="text-xs sm:text-sm">Search songs, mewati hits, artists...</span>
+                </div>
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-gold"></i>
+            </div>
+
+            <!-- HERO BRAND PROMO BANNER (With Play All & Shuffle hitboxes) -->
+            <div class="relative rounded-2xl overflow-hidden shadow-md border border-gold/30 bg-neutral-900">
+                <img id="promoBannerImg" src="/images/banner_powered_by_light.png" alt="Powered by Sohil Khan Chandriya" class="w-full h-auto object-cover block">
+                <div class="absolute inset-0 flex items-end p-3 pointer-events-none">
+                    <div class="flex items-center space-x-2 pointer-events-auto">
+                        <button onclick="playAllCurrent()" class="px-4 py-1.5 rounded-full gold-gradient text-neutral-950 font-bold text-xs shadow-md hover:scale-105 active:scale-95 flex items-center space-x-1">
+                            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                            <span>Play All</span>
+                        </button>
+                        <button onclick="shuffleAllCurrent()" class="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-gold font-bold text-xs border border-gold/40 shadow-md hover:scale-105 active:scale-95 flex items-center space-x-1">
+                            <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+                            <span>Shuffle</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENTLY PLAYED SECTION (HORIZONTAL ROW) -->
+            <div id="recentlyPlayedSection" class="hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-neutral-800 dark:text-neutral-200 flex items-center space-x-1.5">
+                        <i data-lucide="headphones" class="w-4 h-4 text-gold"></i>
+                        <span>Recently Played</span>
+                    </h3>
+                    <span id="recentCountLabel" class="text-xs text-amber-600 dark:text-gold font-semibold"></span>
+                </div>
+                <div id="recentSongsRow" class="flex items-center space-x-3 overflow-x-auto hide-scroll py-1">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- CATEGORIES SCROLLABLE PILLS -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">Discover by Taste</h3>
+                    <span id="categoryCountLabel" class="text-xs font-semibold text-amber-600 dark:text-gold"></span>
+                </div>
+                <div id="categoriesBar" class="flex items-center space-x-2 overflow-x-auto hide-scroll py-1">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- SONGS LIST -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 id="sectionTitle" class="text-base font-bold text-neutral-900 dark:text-white flex items-center space-x-2">
+                        <span>🌟 Top Trending</span>
+                    </h2>
+                    <button onclick="reloadCurrentCategory(true)" class="text-xs font-semibold text-amber-600 dark:text-gold hover:underline flex items-center space-x-1">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Naye Gaane</span>
+                    </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="flex flex-col items-center justify-center py-12 text-gold space-y-2">
+                    <div class="w-8 h-8 border-3 border-gold border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-xs text-neutral-400">Loading music stream...</p>
+                </div>
+
+                <!-- Song List Items -->
+                <div id="songsList" class="space-y-2 hidden">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: LIBRARY PAGE                        -->
+        <!-- ========================================== -->
+        <section id="tab-library" class="nav-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchNavTab('home')" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 border border-gold/30 flex-shrink-0" title="Back to Home">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <span class="text-[11px] text-neutral-400 font-semibold uppercase tracking-wider">Your Collection</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white leading-tight">My Library</h2>
+                    </div>
+                </div>
+                <button onclick="promptCreatePlaylist()" class="w-9 h-9 rounded-xl gold-gradient text-neutral-900 flex items-center justify-center font-bold shadow hover:scale-105 active:scale-95 flex-shrink-0" title="Create Playlist">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Library Sub-tabs (Favorites vs Playlists) -->
+            <div class="flex p-1 rounded-2xl bg-neutral-200/60 dark:bg-neutral-800/60 border border-gold/20">
+                <button onclick="switchLibrarySubTab('favorites')" id="libSubTabFav" class="flex-1 py-2 text-xs font-bold rounded-xl gold-gradient text-neutral-950 shadow-sm transition">
+                    ❤️ Liked Songs (<span id="libFavCount">0</span>)
+                </button>
+                <button onclick="switchLibrarySubTab('playlists')" id="libSubTabPlaylists" class="flex-1 py-2 text-xs font-bold rounded-xl text-neutral-600 dark:text-neutral-400 transition">
+                    📁 Playlists (<span id="libPlaylistsCount">0</span>)
+                </button>
+            </div>
+
+            <!-- Favorites Songs Container -->
+            <div id="libFavoritesContainer" class="space-y-2">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Custom Playlists Container -->
+            <div id="libPlaylistsContainer" class="hidden space-y-3">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: DOWNLOADS PAGE (OFFLINE INDEXEDDB)  -->
+        <!-- ========================================== -->
+        <section id="tab-downloads" class="nav-content hidden space-y-4">
+            <div class="flex items-center space-x-3">
+                <button onclick="switchNavTab('home')" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 border border-gold/30 flex-shrink-0" title="Back to Home">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white leading-tight">Downloads</h2>
+                    <p class="text-xs text-amber-600 dark:text-gold font-semibold">Offline songs • Listen without internet on iPhone & Android</p>
+                </div>
+            </div>
+
+            <div id="downloadsList" class="space-y-2">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: PROFILE & SETTINGS PAGE             -->
+        <!-- ========================================== -->
+        <section id="tab-profile" class="nav-content hidden space-y-5">
+            <div class="flex items-center space-x-3">
+                <button onclick="switchNavTab('home')" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 border border-gold/30 flex-shrink-0" title="Back to Home">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white leading-tight">My Profile & Settings</h2>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Account, Preferences & App Downloads</p>
+                </div>
+            </div>
+
+            <!-- Logged-in Profile Card -->
+            <div class="liquid-card rounded-3xl p-5 shadow-sm border border-gold/40 flex items-center space-x-4">
+                <div class="w-16 h-16 rounded-full gold-gradient flex items-center justify-center font-black text-xl text-neutral-950 shadow border-2 border-white dark:border-neutral-800 flex-shrink-0">
+                    <span id="profileAvatarInitial">SM</span>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <div class="flex items-center space-x-2">
+                        <h3 id="profileNameDisplay" class="text-base font-bold text-neutral-900 dark:text-white truncate">Guest Listener</h3>
+                        <button onclick="promptEditName()" class="text-neutral-400 hover:text-gold text-xs">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <p id="profilePhoneDisplay" class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Guest Mode • Instant Free Access</p>
+                    <span class="inline-block mt-2 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-gold/20 text-amber-700 dark:text-gold border border-gold/30">
+                        Verified Listener • SUNO MEWAT
+                    </span>
+                </div>
+            </div>
+
+            <!-- Preferences Settings Group -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 px-1">Preferences & Playback</h4>
+
+                <!-- 1. Favorite Singers Picker -->
+                <div onclick="openSingersModal()" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-gold transition">
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-neutral-800 text-amber-600 dark:text-gold flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="mic-2" class="w-5 h-5"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">Favorite Singers & Artists (पसंदीदा सिंगर्स)</h5>
+                            <p id="profileSingersSubtitle" class="text-xs text-neutral-500 dark:text-neutral-400 truncate">Tap to choose your favorite singers</p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-neutral-400"></i>
+                </div>
+
+                <!-- 2. Theme Mode -->
+                <div onclick="toggleTheme()" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-gold transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-neutral-800 text-amber-600 dark:text-gold flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="sun-moon" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">App Theme</h5>
+                            <p id="profileThemeSubtitle" class="text-xs text-neutral-500 dark:text-neutral-400">Light / Dark Mode</p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-neutral-400"></i>
+                </div>
+
+                <!-- 3. Audio Streaming Quality -->
+                <div onclick="toggleAudioQuality()" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-gold transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-neutral-800 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="badge-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">Audio Streaming Quality</h5>
+                            <p id="audioQualityLabel" class="text-xs text-neutral-500 dark:text-neutral-400">320 kbps (High Definition)</p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-neutral-400"></i>
+                </div>
+
+                <!-- 4. YouTube Channel Subscribe Button -->
+                <a href="https://www.youtube.com/@sohilkhanchandriya" target="_blank" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-red-500 transition block">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="youtube" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">Sohil Khan Chandriya</h5>
+                            <p class="text-xs text-amber-600 dark:text-gold font-semibold">@sohilkhanchandriya • Official YouTube</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold bg-red-600 text-white px-3 py-1.5 rounded-lg shadow">Subscribe</span>
+                </a>
+            </div>
+
+            <!-- 5. App Install & Downloads Section (Settings Bottom) -->
+            <div class="space-y-3 pt-2">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 px-1">App Install & Shortcuts</h4>
+                
+                <!-- iPhone Safari Shortcut Card -->
+                <div onclick="openInstallModal(true)" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-gold transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-neutral-800 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="apple" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">iPhone Safari Shortcut</h5>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Add to Home Screen (Full Screen App)</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-amber-600 dark:text-gold flex items-center space-x-1">
+                        <span>How-To</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </span>
+                </div>
+
+                <!-- Android Play Store / APK Card -->
+                <a id="profileAndroidDownloadLink" href="https://play.google.com/store/apps/details?id=com.sohilkhan.musicapp" target="_blank" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-500 transition block">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-neutral-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">Android App (Play Store / APK)</h5>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Download native Android music player</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg shadow">Download</span>
+                </a>
+
+                <!-- PWA 1-Tap Shortcut (For browsers supporting install) -->
+                <div onclick="triggerPwaInstall()" class="liquid-card rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:border-gold transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-neutral-800 text-amber-600 dark:text-gold flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="download" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">Add Web App Shortcut</h5>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">1-tap launcher icon on device screen</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold gold-gradient text-neutral-950 px-3 py-1.5 rounded-lg shadow">Install</span>
+                </div>
+            </div>
+
+            <!-- Footer Branding -->
+            <div class="text-center py-6 text-xs text-neutral-400 space-y-1">
+                <p class="font-bold text-amber-600 dark:text-gold">SUNO MEWAT v1.0.3 (Web & iOS Edition)</p>
+                <p>Powered by Sohil Khan Chandriya</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- DEDICATED FULL SEARCH VIEW OVERLAY         -->
+    <!-- ========================================== -->
+    <div id="fullSearchView" class="fixed inset-0 z-50 bg-white dark:bg-neutral-950 p-4 flex flex-col hidden">
+        <div class="flex items-center space-x-3 pb-3 border-b border-gold/30">
+            <button onclick="closeSearchView()" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 border border-gold/30 flex-shrink-0" title="Back">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <div class="relative flex-1 flex items-center rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-gold/40 px-3 py-2">
+                <i data-lucide="search" class="w-4 h-4 text-gold mr-2"></i>
+                <input id="dedicatedSearchInput" type="text" placeholder="Search songs, mewati hits, singers..." class="bg-transparent flex-1 text-sm outline-none text-neutral-900 dark:text-white">
+                <button onclick="document.getElementById('dedicatedSearchInput').value=''; document.getElementById('searchHitsList').innerHTML='';" class="text-neutral-400 hover:text-neutral-600 text-xs px-2">✕</button>
+            </div>
+        </div>
+
+        <!-- Trending Search Tags -->
+        <div class="py-3">
+            <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider block mb-2">🔥 Trending Searches</span>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="setSearchQuery('Trending Hits')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Trending Hits</button>
+                <button onclick="setSearchQuery('Bollywood 2026')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Bollywood 2026</button>
+                <button onclick="setSearchQuery('Arijit Singh')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Arijit Singh</button>
+                <button onclick="setSearchQuery('Sidhu Moose Wala')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Sidhu Moose Wala</button>
+                <button onclick="setSearchQuery('Masoom Sharma')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Masoom Sharma</button>
+                <button onclick="setSearchQuery('Aslam Singer Mewati')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Aslam Singer Mewati</button>
+                <button onclick="setSearchQuery('Diljit Dosanjh')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-900 border border-gold/30 hover:border-gold">Diljit Dosanjh</button>
+            </div>
+        </div>
+
+        <!-- Search Results Count -->
+        <div id="searchStatsHeader" class="flex items-center justify-between py-2 text-xs font-bold text-neutral-500 hidden">
+            <span id="searchResultsCount">0 tracks</span>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">Zero Duplicates</span>
+        </div>
+
+        <!-- Search Results List -->
+        <div id="searchHitsList" class="flex-1 overflow-y-auto space-y-2 py-2 hide-scroll">
+            <!-- Results injected by JS -->
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SINGER ONBOARDING MODAL                    -->
+    <!-- ========================================== -->
+    <div id="singersModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[88vh] flex flex-col shadow-2xl border border-gold/40">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                <div>
+                    <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Choose Favorite Singers</h3>
+                    <p class="text-xs text-amber-600 dark:text-gold font-medium">पसंदीदा सिंगर्स चुनें (कम से कम 1)</p>
+                </div>
+                <button onclick="closeSingersModal()" class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-white">✕</button>
+            </div>
+
+            <!-- Language Filter Tabs in Modal -->
+            <div id="modalLangTabs" class="flex items-center space-x-2 overflow-x-auto hide-scroll py-3">
+                <button onclick="filterSingersByLang('All')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-bold gold-gradient text-neutral-900">All</button>
+                <button onclick="filterSingersByLang('Bollywood')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-gold/30">Bollywood</button>
+                <button onclick="filterSingersByLang('Punjabi')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-gold/30">Punjabi</button>
+                <button onclick="filterSingersByLang('Haryanvi')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-gold/30">Haryanvi</button>
+                <button onclick="filterSingersByLang('Mewati')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-gold/30">Mewati</button>
+                <button onclick="filterSingersByLang('Sufi')" class="lang-tab px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-gold/30">Sufi</button>
+            </div>
+
+            <!-- Singers Grid with 500x500 DPs -->
+            <div id="singersGrid" class="grid grid-cols-3 gap-3 overflow-y-auto hide-scroll py-2 flex-1 my-2">
+                <!-- Generated by JS -->
+            </div>
+
+            <!-- Modal Action Footer -->
+            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                <button onclick="closeSingersModal()" class="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-white font-semibold px-3 py-2">Skip for Now</button>
+                <button id="saveSingersBtn" onclick="saveSelectedSingers()" class="px-5 py-2.5 rounded-xl gold-gradient text-neutral-900 font-bold text-sm shadow hover:scale-105 active:scale-95 transition disabled:opacity-50">Continue with 0 Artists ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- APP INSTALL & SHORTCUT MODAL               -->
+    <!-- ========================================== -->
+    <div id="installModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
+        <div class="bg-white dark:bg-neutral-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] flex flex-col shadow-2xl border border-gold/40">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                <div class="flex items-center space-x-3">
+                    <img src="/images/splash_golden_white.png" class="w-10 h-10 rounded-2xl shadow border border-gold/40 object-cover flex-shrink-0">
+                    <div>
+                        <h3 id="installModalTitle" class="text-base font-bold text-neutral-900 dark:text-white">Install SUNO MEWAT</h3>
+                        <p class="text-xs text-amber-600 dark:text-gold font-medium">Full Screen Music Experience</p>
+                    </div>
+                </div>
+                <button onclick="closeInstallModal()" class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-white">✕</button>
+            </div>
+
+            <!-- Dynamic Content (iOS vs Android) -->
+            <div id="installModalBody" class="py-4 space-y-4 overflow-y-auto hide-scroll flex-1">
+                <!-- Injected by JS based on device -->
+            </div>
+
+            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                <button onclick="closeInstallModal()" class="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-white font-semibold px-3 py-2">Later (Baad me)</button>
+                <button id="installActionBtn" onclick="closeInstallModal()" class="px-5 py-2.5 rounded-xl gold-gradient text-neutral-950 font-bold text-xs shadow hover:scale-105 active:scale-95 transition">Samajh Gaya</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- FULL SCREEN PLAYER SHEET                   -->
+    <!-- ========================================== -->
+    <div id="playerSheet" class="fixed inset-0 z-50 bg-white dark:bg-neutral-950 flex flex-col p-6 transition-transform duration-300 translate-y-full">
+        <div class="flex items-center justify-between pb-4">
+            <button onclick="togglePlayerSheet()" class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 border border-gold/30 flex-shrink-0" title="Close Player">
+                <i data-lucide="chevron-down" class="w-6 h-6"></i>
+            </button>
+            <div class="text-center">
+                <span class="text-xs uppercase font-bold text-neutral-400 tracking-wider">Now Playing</span>
+                <p class="text-xs text-amber-600 dark:text-gold font-semibold">SUNO MEWAT HD</p>
+            </div>
+            <button onclick="toggleFavoriteCurrent()" class="p-2 text-neutral-400 hover:text-red-500">
+                <i id="sheetFavIcon" data-lucide="heart" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl border-2 border-gold/40 my-4">
+                <img id="sheetCover" src="/images/splash_golden_white.png" alt="Cover" class="w-full h-full object-cover">
+            </div>
+
+            <div class="w-full text-center my-2">
+                <h3 id="sheetTitle" class="text-xl font-bold truncate text-neutral-900 dark:text-white">Song Title</h3>
+                <p id="sheetArtist" class="text-sm text-neutral-500 dark:text-neutral-400 truncate mt-1">Artist Name</p>
+            </div>
+
+            <!-- Scrubber -->
+            <div class="w-full my-4">
+                <input id="seekBar" type="range" min="0" max="100" value="0" step="0.1" onchange="seekAudio(this.value)" class="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 accent-amber-500 rounded-lg cursor-pointer">
+                <div class="flex justify-between text-xs text-neutral-400 mt-1.5">
+                    <span id="currentTimeLabel">0:00</span>
+                    <span id="durationLabel">0:00</span>
+                </div>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="flex items-center justify-between w-full px-4 my-2">
+                <button id="shuffleBtn" onclick="toggleShuffle()" class="p-2 text-neutral-400 hover:text-gold transition">
+                    <i data-lucide="shuffle" class="w-5 h-5"></i>
+                </button>
+                <button onclick="playPrev()" class="p-3 text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 transition">
+                    <i data-lucide="skip-back" class="w-7 h-7"></i>
+                </button>
+                <button id="sheetPlayPauseBtn" onclick="togglePlayPause()" class="w-16 h-16 rounded-full gold-gradient flex items-center justify-center text-neutral-950 shadow-xl hover:scale-105 active:scale-95 transition">
+                    <i id="sheetPlayPauseIcon" data-lucide="play" class="w-8 h-8 ml-0.5"></i>
+                </button>
+                <button onclick="playNext()" class="p-3 text-neutral-700 dark:text-neutral-200 hover:text-gold active:scale-95 transition">
+                    <i data-lucide="skip-forward" class="w-7 h-7"></i>
+                </button>
+                <button id="repeatBtn" onclick="toggleRepeat()" class="p-2 text-neutral-400 hover:text-gold transition">
+                    <i data-lucide="repeat" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- PERSISTENT MINI PLAYER BAR                 -->
+    <!-- ========================================== -->
+    <div id="miniPlayer" class="fixed bottom-20 left-3 right-3 z-30 bg-white/95 dark:bg-neutral-900/95 border border-gold/40 rounded-2xl liquid-glass px-3.5 py-2.5 flex items-center justify-between shadow-2xl transition">
+        <div class="flex items-center space-x-3 overflow-hidden flex-1 cursor-pointer" onclick="togglePlayerSheet()">
+            <img id="playerCover" src="/images/splash_golden_white.png" alt="Cover" class="w-11 h-11 rounded-xl object-cover border border-gold/40 flex-shrink-0">
+            <div class="overflow-hidden flex-1">
+                <h4 id="playerTitle" class="text-xs sm:text-sm font-bold truncate text-neutral-900 dark:text-white">Choose a song to play</h4>
+                <p id="playerArtist" class="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">SUNO MEWAT Player</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-1.5 ml-2">
+            <button onclick="playPrev()" class="p-2 text-neutral-600 dark:text-neutral-300 hover:text-gold active:scale-95">
+                <i data-lucide="skip-back" class="w-4 h-4"></i>
+            </button>
+            <button id="playPauseBtn" onclick="togglePlayPause()" class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-neutral-950 shadow hover:scale-105 active:scale-95">
+                <i id="playPauseIcon" data-lucide="play" class="w-5 h-5 ml-0.5"></i>
+            </button>
+            <button onclick="playNext()" class="p-2 text-neutral-600 dark:text-neutral-300 hover:text-gold active:scale-95">
+                <i data-lucide="skip-forward" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- FLOATING 4-TAB NAVIGATION BAR              -->
+    <!-- Matching Android navbar_buttons_bg.png     -->
+    <!-- ========================================== -->
+    <nav class="fixed bottom-2 left-3 right-3 z-30 h-16 max-w-lg mx-auto floating-navbar flex items-center justify-around px-4 shadow-2xl select-none">
+        <button onclick="switchNavTab('home')" class="nav-tab-btn flex flex-col items-center justify-center w-14 py-1 text-gold transition active:scale-95" data-tab="home">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-0.5">Home</span>
+        </button>
+        <button onclick="switchNavTab('library')" class="nav-tab-btn flex flex-col items-center justify-center w-14 py-1 text-neutral-400 hover:text-gold transition active:scale-95" data-tab="library">
+            <i data-lucide="heart" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-0.5">Library</span>
+        </button>
+        <button onclick="switchNavTab('downloads')" class="nav-tab-btn flex flex-col items-center justify-center w-14 py-1 text-neutral-400 hover:text-gold transition active:scale-95" data-tab="downloads">
+            <i data-lucide="arrow-down-to-line" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-0.5">Downloads</span>
+        </button>
+        <button onclick="switchNavTab('profile')" class="nav-tab-btn flex flex-col items-center justify-center w-14 py-1 text-neutral-400 hover:text-gold transition active:scale-95" data-tab="profile">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-0.5">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Hidden Native Audio Engine -->
+    <audio id="audioEngine" preload="auto"></audio>
+
+    <script>
+        // State variables
+        let appConfig = {};
+        let currentPlaylist = [];
+        let currentSongIndex = -1;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let selectedCategory = '🌟 Top Trending';
+        let selectedSingers = JSON.parse(localStorage.getItem('suno_selected_singers') || '[]');
+        let favoriteSongIds = JSON.parse(localStorage.getItem('suno_fav_ids') || '[]');
+        let favoriteSongsMap = JSON.parse(localStorage.getItem('suno_fav_songs') || '{}');
+        let customPlaylists = JSON.parse(localStorage.getItem('suno_playlists') || '[]');
+        let recentPlayedSongs = JSON.parse(localStorage.getItem('suno_recent_songs') || '[]');
+        let downloadedSongs = JSON.parse(localStorage.getItem('suno_downloads') || '[]');
+
+        let activeNavTab = 'home';
+        let searchDebounceTimer = null;
+
+        const DEFAULT_SINGERS = [
+            { id: '1', name: 'Arijit Singh', lang: 'Bollywood', img: 'https://c.saavncdn.com/450/Gehra-Hua-From-Dhurandhar-Hindi-2025-20251205154217-500x500.jpg' },
+            { id: '2', name: 'Neha Kakkar', lang: 'Bollywood', img: 'https://c.saavncdn.com/111/Hate-Story-IV-Hindi-2018-20180223-500x500.jpg' },
+            { id: '3', name: 'Shreya Ghoshal', lang: 'Bollywood', img: 'https://c.saavncdn.com/316/Mangal-Rang-From-Ramayana-Hindi-2026-20261024141033-500x500.jpg' },
+            { id: '4', name: 'Atif Aslam', lang: 'Bollywood', img: 'https://c.saavncdn.com/953/club-ambition-Unknown-2024-20240628202752-500x500.jpg' },
+            { id: '5', name: 'Jubin Nautiyal', lang: 'Bollywood', img: 'https://c.saavncdn.com/598/Saiyaara-Hindi-2025-20250703061754-500x500.jpg' },
+            { id: '6', name: 'Sidhu Moose Wala', lang: 'Punjabi', img: 'https://c.saavncdn.com/392/Kaali-Hoodie-Punjabi-2026-20261016142547-500x500.jpg' },
+            { id: '7', name: 'Diljit Dosanjh', lang: 'Punjabi', img: 'https://c.saavncdn.com/245/Hass-Hass-English-2023-20231026170517-500x500.jpg' },
+            { id: '8', name: 'Karan Aujla', lang: 'Punjabi', img: 'https://c.saavncdn.com/918/AUJLA-SZN-1-Punjabi-2026-20260930131343-500x500.jpg' },
+            { id: '9', name: 'AP Dhillon', lang: 'Punjabi', img: 'https://c.saavncdn.com/890/Excuses-English-2021-20210930112054-500x500.jpg' },
+            { id: '10', name: 'Masoom Sharma', lang: 'Haryanvi', img: 'https://c.saavncdn.com/504/Yaari-Hindi-2025-20250731193932-500x500.jpg' },
+            { id: '11', name: 'Sapna Choudhary', lang: 'Haryanvi', img: 'https://c.saavncdn.com/522/Teri-Lat-Lag-Ja-Gi-Haryanvi-2022-20221109120208-500x500.jpg' },
+            { id: '12', name: 'Renuka Panwar', lang: 'Haryanvi', img: 'https://c.saavncdn.com/407/52-Gaj-Ka-Daman-Haryanvi-2020-20210625170012-500x500.jpg' },
+            { id: '13', name: 'Diler Kharkiya', lang: 'Haryanvi', img: 'https://c.saavncdn.com/195/Sadgi-Teri-Ne-Dil-Touch-Karke-Hindi-2022-20220307081247-500x500.jpg' },
+            { id: '14', name: 'Aslam Singer Mewati', lang: 'Mewati', img: 'https://c.saavncdn.com/715/Mewati-Song-Hindi-2023-20230127042846-500x500.jpg' },
+            { id: '15', name: 'Zubair Mewati', lang: 'Mewati', img: 'https://c.saavncdn.com/681/ZUBAIR-CHIRAKLOT-01-Haryanvi-2024-20240909214019-500x500.jpg' },
+            { id: '16', name: 'Hakku Singariya', lang: 'Mewati', img: 'https://c.saavncdn.com/374/Mewati-Haryanvi-2026-20260511194725-500x500.jpg' },
+            { id: '17', name: 'Alim Singer Mewati', lang: 'Mewati', img: 'https://c.saavncdn.com/715/Mewati-Song-Hindi-2023-20230127042846-500x500.jpg' },
+            { id: '18', name: 'Nusrat Fateh Ali Khan', lang: 'Sufi', img: 'https://c.saavncdn.com/068/Teri-Mohabbat-Unknown-2026-20260708075743-500x500.jpg' },
+            { id: '19', name: 'Rahat Fateh Ali Khan', lang: 'Sufi', img: 'https://c.saavncdn.com/068/Teri-Mohabbat-Unknown-2026-20260708075743-500x500.jpg' }
+        ];
+
+        let modalActiveLang = 'All';
+        let modalSelectedNames = [...selectedSingers];
+
+        const audio = document.getElementById('audioEngine');
+
+        // PWA install prompt deferred event
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        // Init on DOM ready
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            initTheme();
+            initProfileData();
+            await fetchConfig();
+            renderCategories();
+            renderRecentlyPlayed();
+            renderLibrary();
+            renderDownloads();
+
+            // First time visitor prompt: Show Install shortcut / Play store prompt first
+            const isInstalled = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+            if (!isInstalled && !localStorage.getItem('suno_install_modal_shown')) {
+                setTimeout(() => {
+                    openInstallModal();
+                    localStorage.setItem('suno_install_modal_shown', 'true');
+                }, 800);
+            } else if (!localStorage.getItem('suno_onboarding_shown') && selectedSingers.length === 0) {
+                // If install modal already shown, show singer onboarding
+                openSingersModal();
+                localStorage.setItem('suno_onboarding_shown', 'true');
+            }
+
+            // Load initial category
+            const initialCat = selectedSingers.length > 0 ? getForYouLabel() : '🌟 Top Trending';
+            loadCategory(initialCat);
+
+            // Audio event listeners
+            audio.addEventListener('timeupdate', updateProgress);
+            audio.addEventListener('ended', onSongEnded);
+            audio.addEventListener('play', () => setPlayState(true));
+            audio.addEventListener('pause', () => setPlayState(false));
+
+            // Dedicated search input listener
+            document.getElementById('dedicatedSearchInput').addEventListener('input', (e) => {
+                clearTimeout(searchDebounceTimer);
+                const q = e.target.value.trim();
+                searchDebounceTimer = setTimeout(() => {
+                    if (q) performDedicatedSearch(q);
+                    else document.getElementById('searchHitsList').innerHTML = '';
+                }, 400);
+            });
+        });
+
+        // Tab Navigation Switcher (Home, Library, Downloads, Profile)
+        function switchNavTab(tabId) {
+            activeNavTab = tabId;
+            document.querySelectorAll('.nav-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab-btn').forEach(b => {
+                const isActive = b.getAttribute('data-tab') === tabId;
+                b.className = `nav-tab-btn flex flex-col items-center justify-center w-14 py-1 transition active:scale-95 ${isActive ? 'text-gold' : 'text-neutral-400 hover:text-gold'}`;
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            if (tabId === 'library') renderLibrary();
+            if (tabId === 'downloads') renderDownloads();
+            if (tabId === 'home') renderRecentlyPlayed();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lucide.createIcons();
+        }
+
+        // Fetch Dynamic Config from Admin Panel
+        async function fetchConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                if (data.success) {
+                    appConfig = data.config || {};
+                    if (appConfig.announcement && appConfig.isAnnouncementActive) {
+                        document.getElementById('announcementText').textContent = appConfig.announcement;
+                        document.getElementById('announcementBar').classList.remove('hidden');
+                    }
+                    if (appConfig.logoUrl) {
+                        document.getElementById('appLogo').src = appConfig.logoUrl;
+                    }
+                    if (appConfig.bannerImageUrl) {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        document.getElementById('promoBannerImg').src = isDark && appConfig.bannerDarkImageUrl ? appConfig.bannerDarkImageUrl : appConfig.bannerImageUrl;
+                    }
+                    if (appConfig.playStoreUrl) {
+                        const dlLink = document.getElementById('profileAndroidDownloadLink');
+                        if (dlLink) dlLink.href = appConfig.playStoreUrl;
+                    }
+                }
+            } catch (e) {
+                console.error('Config fetch failed:', e);
+            }
+        }
+
+        // Categories management
+        function getForYouLabel() {
+            if (selectedSingers.length === 0) return '✨ For You';
+            return `✨ For You (${selectedSingers.slice(0, 2).join(', ')})`;
+        }
+
+        function renderCategories() {
+            const list = [];
+            if (selectedSingers.length > 0) {
+                list.push(getForYouLabel());
+            }
+            list.push(
+                '🌟 Top Trending',
+                '🎬 Bollywood Hits',
+                '🚜 Punjabi Beats',
+                '🥁 Haryanvi Dhamaka',
+                '🕌 Mewati Special',
+                '❤️ Romantic Melodies',
+                '⚡ Party & DJ Remix',
+                '🎧 Lo-Fi & Chill',
+                '🤲 Qawwali & Sufi'
+            );
+
+            const container = document.getElementById('categoriesBar');
+            container.innerHTML = list.map(cat => {
+                const isSel = (cat === selectedCategory) || (cat.startsWith('✨ For You') && selectedCategory.startsWith('✨ For You'));
+                return `
+                    <button onclick="loadCategory('${cat}')" class="whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition active:scale-95 ${isSel ? 'gold-gradient text-neutral-900 shadow-sm' : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-gold/30 hover:border-gold'}">
+                        ${cat}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Music loading
+        async function loadCategory(cat, refresh = false) {
+            selectedCategory = cat;
+            renderCategories();
+            document.getElementById('sectionTitle').innerHTML = `<span>${cat}</span>`;
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+            document.getElementById('songsList').classList.add('hidden');
+
+            try {
+                let url;
+                if (cat.startsWith('✨ For You') && selectedSingers.length > 0) {
+                    url = `/api/music/for-you?artists=${encodeURIComponent(selectedSingers.join(','))}&page=1`;
+                } else {
+                    url = `/api/music/trending?category=${encodeURIComponent(cat)}&page=1`;
+                }
+
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.success && data.songs) {
+                    currentPlaylist = data.songs;
+                    renderSongs(currentPlaylist);
+                    document.getElementById('categoryCountLabel').textContent = `${data.songs.length} tracks`;
+                }
+            } catch (e) {
+                console.error('Failed to load songs:', e);
+            } finally {
+                document.getElementById('loadingSpinner').classList.add('hidden');
+                document.getElementById('songsList').classList.remove('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        function reloadCurrentCategory() {
+            loadCategory(selectedCategory, true);
+        }
+
+        // Render Songs List
+        function renderSongs(songs) {
+            const container = document.getElementById('songsList');
+            if (!songs || songs.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-neutral-400 text-sm">No songs found.</div>`;
+                return;
+            }
+
+            container.innerHTML = songs.map((song, idx) => {
+                const isCurrent = currentSongIndex === idx;
+                const isFav = favoriteSongIds.includes(song.id);
+                return `
+                    <div onclick="playSongAt(${idx})" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-gold/15 hover:border-gold/50 cursor-pointer transition active:scale-[0.99] ${isCurrent ? 'ring-2 ring-gold bg-gold/10' : ''}">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <span class="w-6 text-center text-xs font-bold text-neutral-400 flex-shrink-0">${idx + 1}</span>
+                            <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-gold/30">
+                                <img src="${song.coverUrl}" alt="${song.title}" class="w-full h-full object-cover">
+                                ${isCurrent && isPlaying ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i data-lucide="volume-2" class="w-5 h-5 text-gold animate-pulse"></i></div>' : ''}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="text-sm font-bold truncate text-neutral-900 dark:text-neutral-100">${song.title}</h4>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">${song.artist}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+                            <button onclick="event.stopPropagation(); toggleFavorite('${song.id}')" class="p-2 text-neutral-400 hover:text-red-500">
+                                <i data-lucide="heart" class="w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); downloadSong('${song.id}')" class="p-2 text-neutral-400 hover:text-gold" title="Download for Offline">
+                                <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); playSongAt(${idx})" class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold hover:scale-110">
+                                <i data-lucide="${isCurrent && isPlaying ? 'pause' : 'play'}" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // Audio Player Engine
+        function playSongAt(idx) {
+            if (idx < 0 || idx >= currentPlaylist.length) return;
+            currentSongIndex = idx;
+            const song = currentPlaylist[idx];
+
+            audio.src = song.audioUrl;
+            audio.play().catch(e => console.warn('Autoplay restricted:', e));
+
+            // Update UI elements
+            document.getElementById('playerTitle').textContent = song.title;
+            document.getElementById('playerArtist').textContent = song.artist;
+            document.getElementById('playerCover').src = song.coverUrl;
+
+            document.getElementById('sheetTitle').textContent = song.title;
+            document.getElementById('sheetArtist').textContent = song.artist;
+            document.getElementById('sheetCover').src = song.coverUrl;
+
+            setPlayState(true);
+            renderSongs(currentPlaylist);
+            updateMediaSession(song);
+            addRecentlyPlayed(song);
+            updateSheetFavIcon(song.id);
+
+            // Log play count to admin stats
+            fetch('/api/music/play', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ songId: song.id })
+            }).catch(() => {});
+        }
+
+        function togglePlayPause() {
+            if (!audio.src) {
+                if (currentPlaylist.length > 0) playSongAt(0);
+                return;
+            }
+            if (audio.paused) {
+                audio.play();
+                setPlayState(true);
+            } else {
+                audio.pause();
+                setPlayState(false);
+            }
+        }
+
+        function setPlayState(playing) {
+            isPlaying = playing;
+            const icon = playing ? 'pause' : 'play';
+            document.getElementById('playPauseBtn').innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 ${playing ? '' : 'ml-0.5'}"></i>`;
+            document.getElementById('sheetPlayPauseBtn').innerHTML = `<i data-lucide="${icon}" class="w-8 h-8 ${playing ? '' : 'ml-0.5'}"></i>`;
+            lucide.createIcons();
+        }
+
+        function playNext() {
+            if (currentPlaylist.length === 0) return;
+            if (isShuffle) {
+                const rand = Math.floor(Math.random() * currentPlaylist.length);
+                playSongAt(rand);
+            } else {
+                let next = currentSongIndex + 1;
+                if (next >= currentPlaylist.length) next = 0;
+                playSongAt(next);
+            }
+        }
+
+        function playPrev() {
+            if (currentPlaylist.length === 0) return;
+            let prev = currentSongIndex - 1;
+            if (prev < 0) prev = currentPlaylist.length - 1;
+            playSongAt(prev);
+        }
+
+        function playAllCurrent() {
+            if (currentPlaylist.length > 0) playSongAt(0);
+        }
+
+        function shuffleAllCurrent() {
+            if (currentPlaylist.length > 0) {
+                isShuffle = true;
+                const rand = Math.floor(Math.random() * currentPlaylist.length);
+                playSongAt(rand);
+            }
+        }
+
+        function onSongEnded() {
+            if (isRepeat) {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                playNext();
+            }
+        }
+
+        function updateProgress() {
+            if (!audio.duration) return;
+            const curr = audio.currentTime;
+            const dur = audio.duration;
+            const pct = (curr / dur) * 100;
+            document.getElementById('seekBar').value = pct;
+            document.getElementById('currentTimeLabel').textContent = formatDuration(curr);
+            document.getElementById('durationLabel').textContent = formatDuration(dur);
+        }
+
+        function seekAudio(pct) {
+            if (!audio.duration) return;
+            audio.currentTime = (pct / 100) * audio.duration;
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').classList.toggle('text-gold', isShuffle);
+        }
+
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            document.getElementById('repeatBtn').classList.toggle('text-gold', isRepeat);
+        }
+
+        function togglePlayerSheet() {
+            const sheet = document.getElementById('playerSheet');
+            sheet.classList.toggle('translate-y-full');
+            lucide.createIcons();
+        }
+
+        // iOS MediaSession Support (iPhone Lock Screen & Dynamic Island controls!)
+        function updateMediaSession(song) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: song.artist,
+                    album: song.album || 'SUNO MEWAT',
+                    artwork: [
+                        { src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }
+                    ]
+                });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); setPlayState(true); });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); setPlayState(false); });
+                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                navigator.mediaSession.setActionHandler('nexttrack', playNext);
+                navigator.mediaSession.setActionHandler('seekto', (details) => {
+                    if (details.seekTime) audio.currentTime = details.seekTime;
+                });
+            }
+        }
+
+        // Recently Played Tracking
+        function addRecentlyPlayed(song) {
+            recentPlayedSongs = recentPlayedSongs.filter(s => s.id !== song.id);
+            recentPlayedSongs.unshift(song);
+            if (recentPlayedSongs.length > 20) recentPlayedSongs.pop();
+            localStorage.setItem('suno_recent_songs', JSON.stringify(recentPlayedSongs));
+            renderRecentlyPlayed();
+        }
+
+        function renderRecentlyPlayed() {
+            const section = document.getElementById('recentlyPlayedSection');
+            const row = document.getElementById('recentSongsRow');
+            if (recentPlayedSongs.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            document.getElementById('recentCountLabel').textContent = `${recentPlayedSongs.length} tracks`;
+            row.innerHTML = recentPlayedSongs.map((s, idx) => `
+                <div onclick="playRecentSong(${idx})" class="flex-shrink-0 w-28 cursor-pointer p-2 rounded-2xl bg-white/70 dark:bg-neutral-800/70 border border-gold/20 hover:border-gold transition active:scale-95 text-center">
+                    <div class="relative w-24 h-24 rounded-xl overflow-hidden mb-1.5 shadow-sm border border-gold/30 mx-auto">
+                        <img src="${s.coverUrl}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/25 flex items-center justify-center opacity-80 hover:opacity-100">
+                            <div class="w-7 h-7 rounded-full gold-gradient flex items-center justify-center text-neutral-900 shadow">
+                                <i data-lucide="play" class="w-3.5 h-3.5 fill-current ml-0.5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h5 class="text-xs font-bold truncate text-neutral-900 dark:text-neutral-100">${s.title}</h5>
+                    <p class="text-[10px] text-neutral-400 truncate">${s.artist}</p>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function playRecentSong(idx) {
+            currentPlaylist = [...recentPlayedSongs];
+            playSongAt(idx);
+        }
+
+        // Favorites (Wishlist) Management
+        function toggleFavorite(songId) {
+            const song = currentPlaylist.find(s => s.id === songId) || recentPlayedSongs.find(s => s.id === songId);
+            if (!song) return;
+
+            if (favoriteSongIds.includes(songId)) {
+                favoriteSongIds = favoriteSongIds.filter(id => id !== songId);
+                delete favoriteSongsMap[songId];
+            } else {
+                favoriteSongIds.unshift(songId);
+                favoriteSongsMap[songId] = song;
+            }
+            localStorage.setItem('suno_fav_ids', JSON.stringify(favoriteSongIds));
+            localStorage.setItem('suno_fav_songs', JSON.stringify(favoriteSongsMap));
+            renderSongs(currentPlaylist);
+            renderLibrary();
+            updateSheetFavIcon(songId);
+        }
+
+        function toggleFavoriteCurrent() {
+            if (currentSongIndex >= 0 && currentPlaylist[currentSongIndex]) {
+                toggleFavorite(currentPlaylist[currentSongIndex].id);
+            }
+        }
+
+        function updateSheetFavIcon(songId) {
+            const isFav = favoriteSongIds.includes(songId);
+            const icon = document.getElementById('sheetFavIcon');
+            icon.setAttribute('data-lucide', 'heart');
+            icon.className = `w-6 h-6 ${isFav ? 'fill-red-500 text-red-500' : 'text-neutral-400'}`;
+            lucide.createIcons();
+        }
+
+        // Library Sub-tabs
+        function switchLibrarySubTab(subTab) {
+            document.getElementById('libSubTabFav').className = `flex-1 py-2 text-xs font-bold rounded-xl transition ${subTab === 'favorites' ? 'gold-gradient text-neutral-950 shadow-sm' : 'text-neutral-600 dark:text-neutral-400'}`;
+            document.getElementById('libSubTabPlaylists').className = `flex-1 py-2 text-xs font-bold rounded-xl transition ${subTab === 'playlists' ? 'gold-gradient text-neutral-950 shadow-sm' : 'text-neutral-600 dark:text-neutral-400'}`;
+
+            document.getElementById('libFavoritesContainer').classList.toggle('hidden', subTab !== 'favorites');
+            document.getElementById('libPlaylistsContainer').classList.toggle('hidden', subTab !== 'playlists');
+            renderLibrary();
+        }
+
+        function renderLibrary() {
+            document.getElementById('libFavCount').textContent = favoriteSongIds.length;
+            document.getElementById('libPlaylistsCount').textContent = customPlaylists.length;
+
+            const favContainer = document.getElementById('libFavoritesContainer');
+            if (favoriteSongIds.length === 0) {
+                favContainer.innerHTML = `
+                    <div class="text-center py-12 text-neutral-400">
+                        <i data-lucide="heart" class="w-10 h-10 text-gold/40 mx-auto mb-2"></i>
+                        <p class="text-xs">No liked songs yet.</p>
+                        <p class="text-[11px] text-neutral-400 mt-1">Tap ❤️ on any song to add to your wishlist.</p>
+                    </div>
+                `;
+            } else {
+                const favList = favoriteSongIds.map(id => favoriteSongsMap[id]).filter(Boolean);
+                favContainer.innerHTML = favList.map((song, idx) => `
+                    <div onclick="playFavSongAt(${idx})" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-gold/15 hover:border-gold/50 cursor-pointer transition">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <span class="w-6 text-center text-xs font-bold text-neutral-400 flex-shrink-0">${idx + 1}</span>
+                            <img src="${song.coverUrl}" class="w-12 h-12 rounded-xl object-cover border border-gold/30 flex-shrink-0">
+                            <div class="overflow-hidden">
+                                <h4 class="text-sm font-bold truncate text-neutral-900 dark:text-neutral-100">${song.title}</h4>
+                                <p class="text-xs text-neutral-500 truncate">${song.artist}</p>
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation(); toggleFavorite('${song.id}')" class="p-2 text-red-500">
+                            <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // Render Custom Playlists
+            const playContainer = document.getElementById('libPlaylistsContainer');
+            if (customPlaylists.length === 0) {
+                playContainer.innerHTML = `
+                    <div class="text-center py-12 text-neutral-400">
+                        <i data-lucide="folder-plus" class="w-10 h-10 text-gold/40 mx-auto mb-2"></i>
+                        <p class="text-xs">No playlists created.</p>
+                        <button onclick="promptCreatePlaylist()" class="mt-3 px-4 py-1.5 rounded-xl gold-gradient font-bold text-xs text-neutral-900 shadow">
+                            Create First Playlist
+                        </button>
+                    </div>
+                `;
+            } else {
+                playContainer.innerHTML = customPlaylists.map((pl, idx) => `
+                    <div class="liquid-card rounded-2xl p-4 flex items-center justify-between border border-gold/30">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-xl gold-gradient flex items-center justify-center text-neutral-900 font-bold">
+                                <i data-lucide="music" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-neutral-900 dark:text-white">${pl.name}</h4>
+                                <p class="text-xs text-neutral-500">${pl.songs ? pl.songs.length : 0} songs</p>
+                            </div>
+                        </div>
+                        <button onclick="playCustomPlaylist(${idx})" class="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold hover:scale-105">
+                            <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function playFavSongAt(idx) {
+            currentPlaylist = favoriteSongIds.map(id => favoriteSongsMap[id]).filter(Boolean);
+            playSongAt(idx);
+        }
+
+        function promptCreatePlaylist() {
+            const name = prompt('Enter new playlist name (e.g. My Mewati Favorites):');
+            if (name && name.trim()) {
+                customPlaylists.push({
+                    id: `pl_${Date.now()}`,
+                    name: name.trim(),
+                    songs: []
+                });
+                localStorage.setItem('suno_playlists', JSON.stringify(customPlaylists));
+                renderLibrary();
+            }
+        }
+
+        function playCustomPlaylist(idx) {
+            const pl = customPlaylists[idx];
+            if (pl && pl.songs && pl.songs.length > 0) {
+                currentPlaylist = pl.songs;
+                playSongAt(0);
+            } else {
+                alert('This playlist is empty. Add songs to play!');
+            }
+        }
+
+        // Offline Downloads (Simulated IndexedDB/Cache)
+        function downloadSong(songId) {
+            const song = currentPlaylist.find(s => s.id === songId) || recentPlayedSongs.find(s => s.id === songId);
+            if (!song) return;
+            if (!downloadedSongs.some(s => s.id === songId)) {
+                downloadedSongs.unshift(song);
+                localStorage.setItem('suno_downloads', JSON.stringify(downloadedSongs));
+                alert(`Downloaded "${song.title}" for offline playback!`);
+                renderDownloads();
+            } else {
+                alert('Song is already downloaded in your offline collection.');
+            }
+        }
+
+        function renderDownloads() {
+            const container = document.getElementById('downloadsList');
+            if (downloadedSongs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-neutral-400">
+                        <i data-lucide="arrow-down-to-line" class="w-12 h-12 text-gold/40 mx-auto mb-3"></i>
+                        <h4 class="text-sm font-bold text-neutral-800 dark:text-neutral-200">No Downloaded Songs</h4>
+                        <p class="text-xs text-neutral-400 mt-1 max-w-xs mx-auto">Tap the download icon on any track to listen offline without internet data.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = downloadedSongs.map((song, idx) => `
+                    <div onclick="playDownloadedSong(${idx})" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-gold/15 hover:border-gold/50 cursor-pointer transition">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <span class="w-6 text-center text-xs font-bold text-neutral-400 flex-shrink-0">${idx + 1}</span>
+                            <img src="${song.coverUrl}" class="w-12 h-12 rounded-xl object-cover border border-gold/30 flex-shrink-0">
+                            <div class="overflow-hidden">
+                                <h4 class="text-sm font-bold truncate text-neutral-900 dark:text-neutral-100">${song.title}</h4>
+                                <p class="text-xs text-neutral-500 truncate">${song.artist} • <span class="text-emerald-600 font-semibold">Offline Ready</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="event.stopPropagation(); removeDownload('${song.id}')" class="p-2 text-neutral-400 hover:text-red-500" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); playDownloadedSong(${idx})" class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold">
+                                <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function playDownloadedSong(idx) {
+            currentPlaylist = [...downloadedSongs];
+            playSongAt(idx);
+        }
+
+        function removeDownload(id) {
+            downloadedSongs = downloadedSongs.filter(s => s.id !== id);
+            localStorage.setItem('suno_downloads', JSON.stringify(downloadedSongs));
+            renderDownloads();
+        }
+
+        // Dedicated Search Screen
+        function openSearchView() {
+            document.getElementById('fullSearchView').classList.remove('hidden');
+            document.getElementById('dedicatedSearchInput').focus();
+            lucide.createIcons();
+        }
+
+        function closeSearchView() {
+            document.getElementById('fullSearchView').classList.add('hidden');
+        }
+
+        function setSearchQuery(q) {
+            document.getElementById('dedicatedSearchInput').value = q;
+            performDedicatedSearch(q);
+        }
+
+        async function performDedicatedSearch(q) {
+            const list = document.getElementById('searchHitsList');
+            const stats = document.getElementById('searchStatsHeader');
+            list.innerHTML = `<div class="py-10 text-center text-xs text-neutral-400"><div class="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>Searching tracks...</div>`;
+
+            try {
+                const res = await fetch(`/api/music/search?q=${encodeURIComponent(q)}&page=1`);
+                const data = await res.json();
+                if (data.success && data.songs) {
+                    stats.classList.remove('hidden');
+                    document.getElementById('searchResultsCount').textContent = `Found ${data.songs.length} unique tracks`;
+                    currentPlaylist = data.songs;
+                    list.innerHTML = data.songs.map((song, idx) => `
+                        <div onclick="playSongAt(${idx}); closeSearchView();" class="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-gold/20 hover:border-gold cursor-pointer transition">
+                            <div class="flex items-center space-x-3 overflow-hidden">
+                                <span class="w-5 text-center text-xs font-bold text-neutral-400">${idx + 1}</span>
+                                <img src="${song.coverUrl}" class="w-11 h-11 rounded-xl object-cover border border-gold/30 flex-shrink-0">
+                                <div class="overflow-hidden">
+                                    <h4 class="text-xs sm:text-sm font-bold truncate text-neutral-900 dark:text-neutral-100">${song.title}</h4>
+                                    <p class="text-[11px] text-neutral-500 truncate">${song.artist}</p>
+                                </div>
+                            </div>
+                            <button class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold flex-shrink-0">
+                                <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                list.innerHTML = `<div class="py-10 text-center text-xs text-red-500">Failed to search. Check internet.</div>`;
+            } finally {
+                lucide.createIcons();
+            }
+        }
+
+        // Profile Data & Edit Name
+        function initProfileData() {
+            const name = localStorage.getItem('suno_user_name') || 'Guest Listener';
+            document.getElementById('profileNameDisplay').textContent = name;
+            document.getElementById('profileAvatarInitial').textContent = name.slice(0, 2).toUpperCase();
+            document.getElementById('profileSingersSubtitle').textContent = selectedSingers.length > 0 ? `${selectedSingers.length} selected (${selectedSingers.slice(0, 3).join(', ')})` : 'Tap to choose your favorite singers';
+        }
+
+        function promptEditName() {
+            const current = localStorage.getItem('suno_user_name') || 'Guest Listener';
+            const newName = prompt('Enter your name:', current);
+            if (newName && newName.trim()) {
+                localStorage.setItem('suno_user_name', newName.trim());
+                initProfileData();
+            }
+        }
+
+        function toggleAudioQuality() {
+            const cur = localStorage.getItem('suno_audio_quality') || '320';
+            const next = cur === '320' ? '160' : '320';
+            localStorage.setItem('suno_audio_quality', next);
+            document.getElementById('audioQualityLabel').textContent = next === '320' ? '320 kbps (High Definition)' : '160 kbps (Standard)';
+            alert(`Streaming quality set to ${next} kbps.`);
+        }
+
+        // Singers Onboarding Modal
+        function openSingersModal() {
+            modalSelectedNames = [...selectedSingers];
+            renderSingersGrid();
+            updateSaveSingersBtn();
+            document.getElementById('singersModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSingersModal() {
+            document.getElementById('singersModal').classList.add('hidden');
+        }
+
+        function filterSingersByLang(lang) {
+            modalActiveLang = lang;
+            document.querySelectorAll('.lang-tab').forEach(b => {
+                const isActive = b.textContent.trim() === lang;
+                b.className = `lang-tab px-3.5 py-1.5 rounded-full text-xs font-bold transition ${isActive ? 'gold-gradient text-neutral-900' : 'bg-neutral-100 dark:bg-neutral-800 border border-gold/30'}`;
+            });
+            renderSingersGrid();
+        }
+
+        function renderSingersGrid() {
+            const filtered = modalActiveLang === 'All' ? DEFAULT_SINGERS : DEFAULT_SINGERS.filter(s => s.lang === modalActiveLang);
+            const grid = document.getElementById('singersGrid');
+            grid.innerHTML = filtered.map(s => {
+                const isSelected = modalSelectedNames.includes(s.name);
+                return `
+                    <div onclick="toggleModalSinger('${s.name}')" class="flex flex-col items-center cursor-pointer p-2 rounded-2xl transition hover:scale-105 active:scale-95 text-center">
+                        <div class="relative w-20 h-20 rounded-full overflow-hidden border-2 transition ${isSelected ? 'border-amber-400 ring-2 ring-gold' : 'border-neutral-200 dark:border-neutral-800'}">
+                            <img src="${s.img}" alt="${s.name}" class="w-full h-full object-cover">
+                            ${isSelected ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><div class="w-6 h-6 rounded-full gold-gradient flex items-center justify-center text-neutral-900 font-bold text-xs">✓</div></div>' : ''}
+                        </div>
+                        <span class="text-xs font-bold truncate w-full mt-2 ${isSelected ? 'text-amber-600 dark:text-gold' : 'text-neutral-800 dark:text-neutral-200'}">${s.name}</span>
+                        <span class="text-[10px] text-neutral-400">${s.lang}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleModalSinger(name) {
+            if (modalSelectedNames.includes(name)) {
+                modalSelectedNames = modalSelectedNames.filter(n => n !== name);
+            } else {
+                modalSelectedNames.push(name);
+            }
+            renderSingersGrid();
+            updateSaveSingersBtn();
+        }
+
+        function updateSaveSingersBtn() {
+            const btn = document.getElementById('saveSingersBtn');
+            const cnt = modalSelectedNames.length;
+            btn.textContent = cnt > 0 ? `Continue with ${cnt} Artists ➔` : 'Select at least 1 Artist';
+            btn.disabled = cnt === 0;
+        }
+
+        function saveSelectedSingers() {
+            selectedSingers = [...modalSelectedNames];
+            localStorage.setItem('suno_selected_singers', JSON.stringify(selectedSingers));
+            closeSingersModal();
+            initProfileData();
+            renderCategories();
+            loadCategory(getForYouLabel());
+        }
+
+        // Theme Toggle
+        function initTheme() {
+            const saved = localStorage.getItem('suno_theme') || 'light';
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('suno_theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+            if (appConfig.bannerImageUrl) {
+                document.getElementById('promoBannerImg').src = isDark && appConfig.bannerDarkImageUrl ? appConfig.bannerDarkImageUrl : appConfig.bannerImageUrl;
+            }
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            document.getElementById('profileThemeSubtitle').textContent = isDark ? 'Dark Mode (Active)' : 'Light Mode (Active)';
+            lucide.createIcons();
+        }
+
+        function formatDuration(sec) {
+            if (!sec || isNaN(sec)) return '0:00';
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // App Install & Shortcut Modal (iPhone & Android)
+        function openInstallModal(manual = false) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const body = document.getElementById('installModalBody');
+            const title = document.getElementById('installModalTitle');
+            const actionBtn = document.getElementById('installActionBtn');
+
+            if (isIOS) {
+                title.innerHTML = `<span>iPhone Safari Shortcut</span>`;
+                actionBtn.textContent = 'Samajh Gaya (Done)';
+                actionBtn.onclick = closeInstallModal;
+
+                body.innerHTML = `
+                    <div class="bg-gradient-to-br from-amber-500/10 to-amber-500/5 rounded-2xl p-4 border border-gold/40">
+                        <div class="flex items-center space-x-2 text-amber-700 dark:text-gold font-bold text-sm mb-1">
+                            <i data-lucide="apple" class="w-5 h-5"></i>
+                            <span>iPhone Par Fullscreen App Lagayein</span>
+                        </div>
+                        <p class="text-xs text-neutral-600 dark:text-neutral-400">Bina App Store ke Safari se 3 aasaan steps me SUNO MEWAT app banayein:</p>
+                    </div>
+
+                    <div class="space-y-3 text-xs text-neutral-700 dark:text-neutral-300">
+                        <div class="flex items-start space-x-3 p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-gold/20">
+                            <span class="w-6 h-6 rounded-full gold-gradient text-neutral-950 font-bold flex items-center justify-center flex-shrink-0 text-xs shadow">1</span>
+                            <div>
+                                <p class="font-bold text-neutral-900 dark:text-white">Safari me Share icon [ ⎋ ] dabayein</p>
+                                <p class="text-neutral-500 dark:text-neutral-400 text-[11px] mt-0.5">Safari browser me screen ke sabse neeche center me <strong>Share button</strong> par tap karein.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3 p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-gold/20">
+                            <span class="w-6 h-6 rounded-full gold-gradient text-neutral-950 font-bold flex items-center justify-center flex-shrink-0 text-xs shadow">2</span>
+                            <div>
+                                <p class="font-bold text-neutral-900 dark:text-white">"Add to Home Screen" chunein</p>
+                                <p class="text-neutral-500 dark:text-neutral-400 text-[11px] mt-0.5">Menu me thoda neeche scroll karein aur <strong>[+] Add to Home Screen</strong> par tap karein.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3 p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-gold/20">
+                            <span class="w-6 h-6 rounded-full gold-gradient text-neutral-950 font-bold flex items-center justify-center flex-shrink-0 text-xs shadow">3</span>
+                            <div>
+                                <p class="font-bold text-neutral-900 dark:text-white">Top Right me "Add" dabayein</p>
+                                <p class="text-neutral-500 dark:text-neutral-400 text-[11px] mt-0.5">Aapke iPhone screen par <strong>SUNO MEWAT</strong> app icon ban jayega aur bina browser bar ke full screen chalega!</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                title.innerHTML = `<span>Install SUNO MEWAT</span>`;
+                actionBtn.textContent = 'Play Store / Download';
+                actionBtn.onclick = () => {
+                    const playStoreUrl = appConfig.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.sohilkhan.musicapp';
+                    window.open(playStoreUrl, '_blank');
+                    closeInstallModal();
+                };
+
+                body.innerHTML = `
+                    <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 rounded-2xl p-4 border border-emerald-500/30">
+                        <div class="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-1">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                            <span>Official Android App Available</span>
+                        </div>
+                        <p class="text-xs text-neutral-600 dark:text-neutral-400">Offline download, background audio aur lock screen notification controls ke sath.</p>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <a href="${appConfig.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.sohilkhan.musicapp'}" target="_blank" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-neutral-800 border-2 border-emerald-500/50 shadow-sm block hover:border-emerald-500 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-neutral-900 dark:text-white text-sm">Download on Google Play</h4>
+                                    <p class="text-neutral-500 text-[11px]">Direct Android App installation</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-600">Open ➔</span>
+                        </a>
+
+                        <div onclick="triggerPwaInstall(); closeInstallModal();" class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-neutral-800 border border-gold/30 shadow-sm cursor-pointer hover:border-gold transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-gold/20 text-amber-700 dark:text-gold flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-neutral-900 dark:text-white text-sm">Add Web App Shortcut</h4>
+                                    <p class="text-neutral-500 text-[11px]">Instant 1-tap browser app shortcut</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-amber-600 dark:text-gold">Add ➔</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('installModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeInstallModal() {
+            document.getElementById('installModal').classList.add('hidden');
+            // If singer onboarding hasn't been shown yet, show it right after!
+            if (!localStorage.getItem('suno_onboarding_shown') && selectedSingers.length === 0) {
+                openSingersModal();
+                localStorage.setItem('suno_onboarding_shown', 'true');
+            }
+        }
+
+        function triggerPwaInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('User installed PWA');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                openInstallModal(true);
+            }
+        }
+    </script>
+</body>
+</html>

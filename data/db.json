@@ -1,0 +1,40 @@
+{
+  "config": {
+    "appName": "SUNO MEWATi",
+    "brandSubtitle": "Powered by Sohil Khan Chandriya",
+    "logoUrl": "/images/banner_namaste_suno_mewat.png",
+    "bannerImageUrl": "/images/banner_powered_by_light.png",
+    "bannerDarkImageUrl": "/images/banner_powered_by_dark.png",
+    "announcement": "🎉 Welcome to SUNO MEWAT! Stream unlimited Mewati, Bollywood, Punjabi, and Sufi music free on iPhone, Android & Desktop.",
+    "isAnnouncementActive": true,
+    "youtubeHandle": "@sohilkhanchandriya",
+    "youtubeUrl": "https://www.youtube.com/@sohilkhanchandriya",
+    "playStoreUrl": "https://play.google.com/store/apps/details?id=com.sohilkhan.musicapp",
+    "adminPassword": "admin123"
+  },
+  "banners": [
+    {
+      "id": "b1",
+      "title": "Unlimited Free Streaming",
+      "subtitle": "Powered by Sohil Khan Chandriya",
+      "imageUrl": "/images/banner_powered_by_light.png",
+      "linkUrl": "https://www.youtube.com/@sohilkhanchandriya",
+      "active": true
+    }
+  ],
+  "users": [
+    {
+      "id": "u1",
+      "name": "Sohil Khan Chandriya",
+      "phone": "9876543210",
+      "isGuest": false,
+      "status": "active",
+      "joinedAt": "2026-10-28T02:00:00.000Z",
+      "streamCount": 48
+    }
+  ],
+  "stats": {
+    "totalStreams": 229,
+    "totalUsers": 1
+  }
+}
