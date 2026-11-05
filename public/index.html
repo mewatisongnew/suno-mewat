@@ -113,9 +113,6 @@
             <button onclick="toggleTheme()" title="Toggle Theme" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-gold hover:scale-105 active:scale-95 transition">
                 <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
             </button>
-            <a href="/admin" title="Admin Hub" class="w-9 h-9 rounded-full bg-gold-dark/20 flex items-center justify-center text-amber-700 dark:text-gold hover:scale-105 active:scale-95 transition">
-                <i data-lucide="shield" class="w-4 h-4"></i>
-            </a>
         </div>
     </header>
 
@@ -713,6 +710,9 @@
                 localStorage.setItem('suno_onboarding_shown', 'true');
             }
 
+            // Restore audio playback state if user refreshed the page
+            restorePlaybackState();
+
             // Load initial category
             const initialCat = selectedSingers.length > 0 ? getForYouLabel() : '🌟 Top Trending';
             loadCategory(initialCat);
@@ -858,8 +858,10 @@
                 return;
             }
 
+            const savedNow = JSON.parse(localStorage.getItem('suno_now_playing') || '{}');
+
             container.innerHTML = songs.map((song, idx) => {
-                const isCurrent = currentSongIndex === idx;
+                const isCurrent = (currentSongIndex === idx && isPlaying) || (song.id && song.id === savedNow.id && isPlaying);
                 const isFav = favoriteSongIds.includes(song.id);
                 return `
                     <div onclick="playSongAt(${idx})" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/80 dark:bg-neutral-800/80 border border-gold/15 hover:border-gold/50 cursor-pointer transition active:scale-[0.99] ${isCurrent ? 'ring-2 ring-gold bg-gold/10' : ''}">
@@ -867,7 +869,7 @@
                             <span class="w-6 text-center text-xs font-bold text-neutral-400 flex-shrink-0">${idx + 1}</span>
                             <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-gold/30">
                                 <img src="${song.coverUrl}" alt="${song.title}" class="w-full h-full object-cover">
-                                ${isCurrent && isPlaying ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i data-lucide="volume-2" class="w-5 h-5 text-gold animate-pulse"></i></div>' : ''}
+                                ${isCurrent ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i data-lucide="volume-2" class="w-5 h-5 text-gold animate-pulse"></i></div>' : ''}
                             </div>
                             <div class="overflow-hidden">
                                 <h4 class="text-sm font-bold truncate text-neutral-900 dark:text-neutral-100">${song.title}</h4>
@@ -882,7 +884,7 @@
                                 <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i>
                             </button>
                             <button onclick="event.stopPropagation(); playSongAt(${idx})" class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-amber-600 dark:text-gold hover:scale-110">
-                                <i data-lucide="${isCurrent && isPlaying ? 'pause' : 'play'}" class="w-4 h-4"></i>
+                                <i data-lucide="${isCurrent ? 'pause' : 'play'}" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
@@ -899,6 +901,12 @@
 
             audio.src = song.audioUrl;
             audio.play().catch(e => console.warn('Autoplay restricted:', e));
+
+            // Persist playback state across page refreshes
+            localStorage.setItem('suno_now_playing', JSON.stringify(song));
+            localStorage.setItem('suno_now_index', idx.toString());
+            localStorage.setItem('suno_now_playlist', JSON.stringify(currentPlaylist));
+            localStorage.setItem('suno_was_playing', 'true');
 
             // Update UI elements
             document.getElementById('playerTitle').textContent = song.title;
@@ -925,6 +933,11 @@
 
         function togglePlayPause() {
             if (!audio.src) {
+                const savedRaw = localStorage.getItem('suno_now_playing');
+                if (savedRaw) {
+                    restorePlaybackState();
+                    return;
+                }
                 if (currentPlaylist.length > 0) playSongAt(0);
                 return;
             }
@@ -939,52 +952,14 @@
 
         function setPlayState(playing) {
             isPlaying = playing;
+            localStorage.setItem('suno_was_playing', playing ? 'true' : 'false');
             const icon = playing ? 'pause' : 'play';
             document.getElementById('playPauseBtn').innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 ${playing ? '' : 'ml-0.5'}"></i>`;
             document.getElementById('sheetPlayPauseBtn').innerHTML = `<i data-lucide="${icon}" class="w-8 h-8 ${playing ? '' : 'ml-0.5'}"></i>`;
             lucide.createIcons();
         }
 
-        function playNext() {
-            if (currentPlaylist.length === 0) return;
-            if (isShuffle) {
-                const rand = Math.floor(Math.random() * currentPlaylist.length);
-                playSongAt(rand);
-            } else {
-                let next = currentSongIndex + 1;
-                if (next >= currentPlaylist.length) next = 0;
-                playSongAt(next);
-            }
-        }
-
-        function playPrev() {
-            if (currentPlaylist.length === 0) return;
-            let prev = currentSongIndex - 1;
-            if (prev < 0) prev = currentPlaylist.length - 1;
-            playSongAt(prev);
-        }
-
-        function playAllCurrent() {
-            if (currentPlaylist.length > 0) playSongAt(0);
-        }
-
-        function shuffleAllCurrent() {
-            if (currentPlaylist.length > 0) {
-                isShuffle = true;
-                const rand = Math.floor(Math.random() * currentPlaylist.length);
-                playSongAt(rand);
-            }
-        }
-
-        function onSongEnded() {
-            if (isRepeat) {
-                audio.currentTime = 0;
-                audio.play();
-            } else {
-                playNext();
-            }
-        }
-
+        let lastSavedPlaybackTime = 0;
         function updateProgress() {
             if (!audio.duration) return;
             const curr = audio.currentTime;
@@ -993,6 +968,81 @@
             document.getElementById('seekBar').value = pct;
             document.getElementById('currentTimeLabel').textContent = formatDuration(curr);
             document.getElementById('durationLabel').textContent = formatDuration(dur);
+
+            // Save playback position periodically (every 1 sec) so refresh doesn't lose current point
+            if (Math.abs(curr - lastSavedPlaybackTime) >= 1) {
+                lastSavedPlaybackTime = curr;
+                localStorage.setItem('suno_playback_time', curr.toString());
+            }
+        }
+
+        // Restore song & resume playback seamlessly on page refresh
+        function restorePlaybackState() {
+            try {
+                const savedSongRaw = localStorage.getItem('suno_now_playing');
+                if (!savedSongRaw) return;
+                const song = JSON.parse(savedSongRaw);
+                if (!song || !song.audioUrl) return;
+
+                const savedPlaylistRaw = localStorage.getItem('suno_now_playlist');
+                if (savedPlaylistRaw) {
+                    try {
+                        const parsedList = JSON.parse(savedPlaylistRaw);
+                        if (Array.isArray(parsedList) && parsedList.length > 0) {
+                            currentPlaylist = parsedList;
+                        }
+                    } catch (_) {}
+                }
+
+                currentSongIndex = parseInt(localStorage.getItem('suno_now_index') || '0', 10);
+                const savedTime = parseFloat(localStorage.getItem('suno_playback_time') || '0');
+                const wasPlaying = localStorage.getItem('suno_was_playing') === 'true';
+
+                audio.src = song.audioUrl;
+
+                // Update Mini Player & Sheet UI
+                document.getElementById('playerTitle').textContent = song.title;
+                document.getElementById('playerArtist').textContent = song.artist;
+                document.getElementById('playerCover').src = song.coverUrl;
+
+                document.getElementById('sheetTitle').textContent = song.title;
+                document.getElementById('sheetArtist').textContent = song.artist;
+                document.getElementById('sheetCover').src = song.coverUrl;
+
+                updateMediaSession(song);
+                updateSheetFavIcon(song.id);
+
+                const restoreTimeHandler = () => {
+                    if (savedTime > 0 && (!audio.duration || savedTime < audio.duration)) {
+                        audio.currentTime = savedTime;
+                    }
+                    audio.removeEventListener('loadedmetadata', restoreTimeHandler);
+                };
+                audio.addEventListener('loadedmetadata', restoreTimeHandler);
+
+                if (wasPlaying) {
+                    setPlayState(true);
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch((err) => {
+                            console.log('Autoplay restriction on refresh, will resume on first tap:', err);
+                            const resumePlayback = () => {
+                                if (audio.paused) {
+                                    audio.play().then(() => setPlayState(true)).catch(() => {});
+                                }
+                                window.removeEventListener('click', resumePlayback);
+                                window.removeEventListener('touchstart', resumePlayback);
+                                window.removeEventListener('scroll', resumePlayback);
+                            };
+                            window.addEventListener('click', resumePlayback, { passive: true, once: true });
+                            window.addEventListener('touchstart', resumePlayback, { passive: true, once: true });
+                            window.addEventListener('scroll', resumePlayback, { passive: true, once: true });
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn('Playback restore error:', e);
+            }
         }
 
         function seekAudio(pct) {
